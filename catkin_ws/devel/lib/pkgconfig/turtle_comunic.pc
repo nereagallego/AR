@@ -1,0 +1,1 @@
+/home/nerea/AR/catkin_ws/devel/.private/turtle_comunic/lib/pkgconfig/turtle_comunic.pc

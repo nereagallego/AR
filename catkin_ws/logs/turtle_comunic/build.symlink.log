@@ -1,0 +1,5 @@
+Symlinking /home/nerea/AR/catkin_ws/devel/share/turtle_comunic/cmake/turtle_comunicConfig.cmake
+Symlinking /home/nerea/AR/catkin_ws/devel/share/turtle_comunic/cmake/turtle_comunicConfig-version.cmake
+Symlinking /home/nerea/AR/catkin_ws/devel/lib/turtle_comunic/subpose
+Symlinking /home/nerea/AR/catkin_ws/devel/lib/turtle_comunic/pubvel
+Symlinking /home/nerea/AR/catkin_ws/devel/lib/pkgconfig/turtle_comunic.pc

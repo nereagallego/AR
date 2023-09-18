@@ -1,0 +1,3 @@
+<launch>
+  <node name="world" pkg="stage_ros" type="stageros" args="$(find first_package)/simple.world" output="screen"/>
+</launch>
