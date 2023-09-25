@@ -1,0 +1,9 @@
+[35m[1mScanning dependencies of target listener[0m
+[ 33%] Built target helloWorld
+[35m[1mScanning dependencies of target talker[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/listener.dir/src/listener.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/talker.dir/src/talker.cpp.o[0m
+[ 83%] [32m[1mLinking CXX executable /home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/talker[0m
+[100%] [32m[1mLinking CXX executable /home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/listener[0m
+[100%] Built target talker
+[100%] Built target listener

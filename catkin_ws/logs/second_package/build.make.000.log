@@ -1,0 +1,4 @@
+[35m[1mScanning dependencies of target helloWorld[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/helloWorld.dir/src/helloWorld.cpp.o[0m
+[100%] [32m[1mLinking CXX executable /home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/helloWorld[0m
+[100%] Built target helloWorld

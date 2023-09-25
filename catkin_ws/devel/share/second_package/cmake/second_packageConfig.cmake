@@ -1,0 +1,1 @@
+/home/nerea/AR/catkin_ws/devel/.private/second_package/share/second_package/cmake/second_packageConfig.cmake

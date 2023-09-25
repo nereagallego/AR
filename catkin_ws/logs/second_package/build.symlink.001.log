@@ -1,0 +1,6 @@
+Linked: (/home/nerea/AR/catkin_ws/devel/.private/second_package/share/second_package/cmake/second_packageConfig-version.cmake, /home/nerea/AR/catkin_ws/devel/share/second_package/cmake/second_packageConfig-version.cmake)
+Linked: (/home/nerea/AR/catkin_ws/devel/.private/second_package/share/second_package/cmake/second_packageConfig.cmake, /home/nerea/AR/catkin_ws/devel/share/second_package/cmake/second_packageConfig.cmake)
+Linked: (/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/pkgconfig/second_package.pc, /home/nerea/AR/catkin_ws/devel/lib/pkgconfig/second_package.pc)
+Symlinking /home/nerea/AR/catkin_ws/devel/lib/second_package/talker
+Symlinking /home/nerea/AR/catkin_ws/devel/lib/second_package/listener
+Linked: (/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/helloWorld, /home/nerea/AR/catkin_ws/devel/lib/second_package/helloWorld)
