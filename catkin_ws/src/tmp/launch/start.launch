@@ -1,0 +1,5 @@
+<launch>
+  <node name="arob_lab2" pkg="stage_ros" type="stageros" args="$(find p09_arob_lab2)/world/simple.world" output="screen"/>
+  <node name="keyboards" pkg="p09_arob_lab2" type="teleop_twist_keyboard" output="screen"/>
+  <node name="robot_location" pkg="p09_arob_lab2" type="robot_location" output="screen"/>
+</launch>
