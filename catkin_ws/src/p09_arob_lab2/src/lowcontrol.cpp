@@ -22,14 +22,16 @@ public:
 	Lowlevelcontrol() {
 
 		position_sub_ = nh_.subscribe("/base_pose_ground_truth", 1, &Lowlevelcontrol::positionCb, this);
-		goal_sub_ = nh_.subscribe("goal", 1, &Lowlevelcontrol::goalCb, this);
+		goal_sub_ = nh_.subscribe("/goal", 1, &Lowlevelcontrol::goalCb, this);
 		velocity_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 		
 		Goal.pose.position.x = 0; //update the initial values of these variables
 		Goal.pose.position.y = 0;
-		kalpha = 0; // the values of these parameters should be obtained by you
-		krho = 0;
-		kbeta = 0;
+		kalpha = 0.25; // the values of these parameters should be obtained by you
+		krho = 0.2;
+		kbeta = -0.05;
+
+		
 	}
 
 	~Lowlevelcontrol() {
@@ -39,14 +41,17 @@ public:
 
 		std::cout << " Goal Update: "<< msg.pose.position.x << endl;
 		std::cout << " Goal Update: "<< msg.pose.position.y << endl;
-	//	upadte the goal
+	
+		//	upadte the goal
+		Goal.pose.position.x = msg.pose.position.x;
+		Goal.pose.position.y = msg.pose.position.y;
 	}
 
 	void positionCb(const nav_msgs::Odometry& msg) {
 
 		
-		float ex = msg.pose.pose.position.x - Goal.pose.position.x;
-		float ey = msg.pose.pose.position.y - Goal.pose.position.y;
+		float ex = Goal.pose.position.x - msg.pose.pose.position.x ;
+		float ey = Goal.pose.position.y - msg.pose.pose.position.y ;
 		float rho = sqrt(ex*ex+ey*ey);
 		float alpha = atan2(ey,ex) - tf::getYaw(msg.pose.pose.orientation);
 		if (alpha < -M_PI) alpha = 2*M_PI - abs(alpha);
@@ -67,9 +72,19 @@ public:
 		std::cout << "Th: "<< tf::getYaw(msg.pose.pose.orientation) << endl;
 
 		geometry_msgs::Twist input; //to send the velocities
+		if (abs(ex) < 0.1 and abs(ey) < 0.1) {
+			input.linear.x = 0;
+			input.angular.z = 0;
+			velocity_pub_.publish(input);
+		}else{
 
+			(krho*rho) < 1 ? input.linear.x = krho*rho : input.linear.x = 1;
+			
+			input.angular.z = kalpha*alpha + kbeta*beta;
+		}
 		//here you have to implement the controller
 		velocity_pub_.publish(input);
+
 	}
 
 	
