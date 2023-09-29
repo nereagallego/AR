@@ -59,6 +59,7 @@ define newModel model
   gui_nose 0
   color "yellow"
   ranger_return -1
+  obstacle_return 0
 )
 
 
