@@ -59,9 +59,10 @@ public:
 		Goal.pose.position.y = targets[currentTarget][1];
 		Goal.pose.position.z = targets[currentTarget][2];
 		//initialize the publisher
-		goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/command/pose", 1);
+		goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("command/pose", 1);
 		//initialize the subscriber
-		position_sub_ = nh_.subscribe("/ground_truth_to_tf/pose", 1, &FollowTargetsClass::positionCb, this);
+		// review the topic name
+		position_sub_ = nh_.subscribe("ground_truth/state", 1, &FollowTargetsClass::positionCb, this);
 		
 		//publish the goal
 		goal_pub_.publish(Goal);
@@ -75,6 +76,7 @@ public:
 	//complete the class by adding the functio that you need
 
 	void positionCb(const nav_msgs::Odometry& msg) {
+		// cout << msg.pose.pose.position.x << " " << msg.pose.pose.position.y << " " << msg.pose.pose.position.z << endl;
 		//check if the robot has reached the current target
 		float ex = Goal.pose.position.x - msg.pose.pose.position.x ;
 		float ey = Goal.pose.position.y - msg.pose.pose.position.y ;
@@ -100,7 +102,7 @@ public:
 int main(int argc, char** argv) {
 
 
-	ros::init(argc, argv, "followTargets");
+	ros::init(argc, argv, "followTargets3D");
 	ros::NodeHandle nh("~");
 	FollowTargetsClass FT;
 
