@@ -84,7 +84,7 @@ public:
 		float ex = Goal.pose.position.x - msg.pose.pose.position.x ;
 		float ey = Goal.pose.position.y - msg.pose.pose.position.y ;
 		float ez = Goal.pose.position.z - msg.pose.pose.position.z ;
-		if (abs(ex) < 0.02 and abs(ey) < 0.02 and abs(ez) < 0.02) {
+		if (abs(ex) < 0.05 and abs(ey) < 0.05 and abs(ez) < 0.05) {
 			//if the robot has reached the current target, publish the next target
 			if (currentTarget < targets.size()) {
 				Goal.pose.position.x = targets[currentTarget][0];
