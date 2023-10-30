@@ -61,7 +61,7 @@ public:
 		Goal.pose.position.y = targets[currentTarget][1];
 		Goal.pose.position.z = targets[currentTarget][2];
 		//initialize the publisher
-		goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("command/pose", 1);
+		goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/command/pose", 1);
 		//initialize the subscriber
 		// review the topic name
 		position_sub_ = nh_.subscribe("ground_truth/state", 1, &FollowTargetsClass::positionCb, this);
