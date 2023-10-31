@@ -5,7 +5,7 @@
     controller/twist
      --shutdown-timeout 3"/>
 
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="
+  <node name="controller_spawner2" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="
     controller/pose
      --shutdown-timeout 3"/>
 </launch>
