@@ -1,0 +1,6 @@
+[submodule "hector-quadrotor-noetic"]
+	path = hector-quadrotor-noetic
+	url = https://github.com/RAFALAMAO/hector-quadrotor-noetic
+[submodule "catkin_ws/src/hector-quadrotor-noetic"]
+	path = catkin_ws/src/hector-quadrotor-noetic
+	url = https://github.com/RAFALAMAO/hector-quadrotor-noetic
