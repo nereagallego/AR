@@ -1,2 +1,0 @@
-hector_quadrotor_noetic/hector_localization/hector_localization
-/home/nerea/AR/catkin_ws/devel/.private/hector_localization/cmake.lock /home/nerea/AR/catkin_ws/devel/./cmake.lock

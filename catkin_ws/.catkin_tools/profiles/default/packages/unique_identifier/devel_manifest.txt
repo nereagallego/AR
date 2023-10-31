@@ -1,2 +1,0 @@
-unique_identifier/unique_identifier
-/home/nerea/AR/catkin_ws/devel/.private/unique_identifier/cmake.lock /home/nerea/AR/catkin_ws/devel/./cmake.lock
