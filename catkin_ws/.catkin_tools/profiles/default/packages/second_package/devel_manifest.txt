@@ -1,0 +1,8 @@
+second_package
+/home/nerea/AR/catkin_ws/devel/.private/second_package/cmake.lock /home/nerea/AR/catkin_ws/devel/./cmake.lock
+/home/nerea/AR/catkin_ws/devel/.private/second_package/share/second_package/cmake/second_packageConfig-version.cmake /home/nerea/AR/catkin_ws/devel/share/second_package/cmake/second_packageConfig-version.cmake
+/home/nerea/AR/catkin_ws/devel/.private/second_package/share/second_package/cmake/second_packageConfig.cmake /home/nerea/AR/catkin_ws/devel/share/second_package/cmake/second_packageConfig.cmake
+/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/pkgconfig/second_package.pc /home/nerea/AR/catkin_ws/devel/lib/pkgconfig/second_package.pc
+/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/talker /home/nerea/AR/catkin_ws/devel/lib/second_package/talker
+/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/listener /home/nerea/AR/catkin_ws/devel/lib/second_package/listener
+/home/nerea/AR/catkin_ws/devel/.private/second_package/lib/second_package/helloWorld /home/nerea/AR/catkin_ws/devel/lib/second_package/helloWorld
