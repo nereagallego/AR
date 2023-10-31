@@ -1,4 +1,4 @@
-hector-quadrotor-noetic/hector_ui
+hector_quadrotor_noetic/hector_ui
 /home/nerea/AR/catkin_ws/devel/.private/hector_ui/cmake.lock /home/nerea/AR/catkin_ws/devel/./cmake.lock
 /home/nerea/AR/catkin_ws/devel/.private/hector_ui/share/hector_ui/cmake/hector_uiConfig.cmake /home/nerea/AR/catkin_ws/devel/share/hector_ui/cmake/hector_uiConfig.cmake
 /home/nerea/AR/catkin_ws/devel/.private/hector_ui/share/hector_ui/cmake/hector_uiConfig-version.cmake /home/nerea/AR/catkin_ws/devel/share/hector_ui/cmake/hector_uiConfig-version.cmake
