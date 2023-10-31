@@ -1,6 +1,0 @@
-p09_arob_lab3
-/home/nerea/AR/catkin_ws/devel/.private/p09_arob_lab3/cmake.lock /home/nerea/AR/catkin_ws/devel/./cmake.lock
-/home/nerea/AR/catkin_ws/devel/.private/p09_arob_lab3/share/p09_arob_lab3/cmake/p09_arob_lab3Config.cmake /home/nerea/AR/catkin_ws/devel/share/p09_arob_lab3/cmake/p09_arob_lab3Config.cmake
-/home/nerea/AR/catkin_ws/devel/.private/p09_arob_lab3/share/p09_arob_lab3/cmake/p09_arob_lab3Config-version.cmake /home/nerea/AR/catkin_ws/devel/share/p09_arob_lab3/cmake/p09_arob_lab3Config-version.cmake
-/home/nerea/AR/catkin_ws/devel/.private/p09_arob_lab3/lib/pkgconfig/p09_arob_lab3.pc /home/nerea/AR/catkin_ws/devel/lib/pkgconfig/p09_arob_lab3.pc
-/home/nerea/AR/catkin_ws/devel/.private/p09_arob_lab3/lib/p09_arob_lab3/followTargets3D /home/nerea/AR/catkin_ws/devel/lib/p09_arob_lab3/followTargets3D

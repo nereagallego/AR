@@ -1,8 +1,0 @@
-prefix=/home/nerea/AR/catkin_ws/install
-
-Name: second_package
-Description: Description of second_package
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib -lsecond_package
-Requires: 
