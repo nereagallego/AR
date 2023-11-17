@@ -1,1 +1,10 @@
-digraph G { "No tf data received" }
+digraph G {
+"base_link" -> "base_laser_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
+"base_footprint" -> "base_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
+"odom" -> "base_footprint"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
+"map" -> "odom"[label=" Broadcaster: /amcl\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 176.5\nOldest transform: 171.6\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 175.5"[ shape=plaintext ] ;
+}->"map";
+}
