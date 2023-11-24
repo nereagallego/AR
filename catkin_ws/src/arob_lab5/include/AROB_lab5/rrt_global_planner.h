@@ -41,6 +41,10 @@ private:
     double max_dist_;
     double resolution_;
 
+    bool visualize_markers_;
+
+    ros::Publisher marker_pub_;
+
     // functions to compute the plan
     bool obstacleFree(const unsigned int x0, const unsigned int y0, const unsigned int x1, const unsigned int y1);
     bool computeRRT(const std::vector<int> start, const std::vector<int> goal, 

@@ -1,5 +1,7 @@
 #include <pluginlib/class_list_macros.h>
 #include "AROB_lab5/rrt_global_planner.h"
+#include <cmath>
+#include <random>
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
@@ -25,7 +27,14 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_
         ros::NodeHandle nh_local("~/local_costmap/");
         ros::NodeHandle nh_global("~/global_costmap/");
 
-        nh.param("maxsamples", max_samples_, 0.0);
+        // use markers to visualize the tree
+        nh.param("visualize_markers", visualize_markers_, true);
+        if (visualize_markers_){
+            std::cout << "Initializing markers" << std::endl;
+            marker_pub_ = nh.advertise<visualization_msgs::Marker>("/rrt_marker", 100);
+        }
+
+        nh.param("max_samples_", max_samples_, 100000.0);
 
         //to make sure one of the nodes in the plan lies in the local costmap
         double width, height;
@@ -44,6 +53,8 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_
         global_frame_id_ = costmap_ros_->getGlobalFrameID();
 
         initialized_ = true;
+
+        std::cout << "Visualization markers: " << visualize_markers_ << std::endl;
     }
 	else{
 	    ROS_WARN("This planner has already been initialized... doing nothing.");
@@ -106,68 +117,126 @@ bool RRTPlanner::computeRRT(const std::vector<int> start, const std::vector<int>
     srand(time(NULL));
         
     // Initialize the tree with the starting point in map coordinates
-    TreeNode *itr_node = new TreeNode(start); 
+    TreeNode *root = new TreeNode(start); 
+    // TreeNode *itr_node = root;
 
-
-
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis_x(0, costmap_->getSizeInCellsX());
+    std::uniform_real_distribution<> dis_y(0, costmap_->getSizeInCellsY());
 
     // implement RRT algorithm here
-    while (not finished){
-        // choose randomlly a point in the map
-        int x_rand = rand() % costmap_->getSizeInCellsX();
-        int y_rand = rand() % costmap_->getSizeInCellsY();
-        std::vector<int> rand_point{x_rand, y_rand};
+    int count = 0;
+    std::cout << "Max samples: " << int(max_samples_) << std::endl;
+    while (count < int(max_samples_)){
+        int x_rand = dis_x(gen);
+        int y_rand = dis_y(gen);
+        std::vector<int> point_rand{x_rand, y_rand};
+        TreeNode *rand_node = new TreeNode(point_rand);
 
-        TreeNode *rand_node = new TreeNode(rand_point);
-
-        // find the closest node in the tree to the random point
-        TreeNode *nearest_node = itr_node->neast(rand_node);
-        std::vector<int> new_point;
-
+        // Find the closest node in the tree to the random point
+        TreeNode *nearest_node = root->neast(rand_node);  
         std::vector<int> nearest_point = nearest_node->getNode();
-        // check if the distance to nearest point is greater than max_dist_
-        if ( distance(nearest_point[0], nearest_point[1], rand_point[0], rand_point[1]) > max_dist_ ){
-            // find the point in the direction of the random point at a distance max_dist_
-            double theta = atan2(rand_point[1] - nearest_point[1], rand_point[0] - nearest_point[0]);
-            int x_new = nearest_point[0] + max_dist_ * cos(theta);
-            int y_new = nearest_point[1] + max_dist_ * sin(theta);
-            new_point = {x_new, y_new};
-        } else {
-            new_point = rand_point;
-        }
 
-        // check if the line between the nearest point and the new point is free of collision
-        if ( obstacleFree(nearest_point[0], nearest_point[1], new_point[0], new_point[1]) ){
+        // check if the line between the nearest node and the random point is free of collision
+        if (obstacleFree(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1])){
+            
+            std::vector<int> new_point;
+            // if the distance between the nearest node and the random point is greater than max_dist_
+            // then the new point is max_dist_ away from the nearest node in the direction of the random point
+            if (distance(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1]) > max_dist_){
+                double theta = atan2(point_rand[1] - nearest_point[1], point_rand[0] - nearest_point[0]);
+                new_point.push_back(nearest_point[0] + max_dist_*cos(theta));
+                new_point.push_back(nearest_point[1] + max_dist_*sin(theta));
+            }else{
+                new_point = point_rand;
+            }
+
             // add the new point to the tree
             TreeNode *new_node = new TreeNode(new_point);
-            new_node->setParent(nearest_node);
             nearest_node->appendChild(new_node);
-            itr_node = new_node;
-        }
-        
-        // check if the new point is close enough to the goal
-        if ( distance(new_point[0], new_point[1], goal[0], goal[1]) < max_dist_ ){
-            // add the goal to the tree
-            TreeNode *goal_node = new TreeNode(goal);
-            goal_node->setParent(itr_node);
-            itr_node->appendChild(goal_node);
-            sol = goal_node->returnSolution();
-            finished = true;
-        }
+            new_node->setParent(nearest_node);
+            // itr_node = new_node;
 
-        // check if the number of samples is greater than max_samples_
-        // if ( itr_node->getSamples() > max_samples_ ){
-        //     finished = true;
-        // }
-
+            // check if the new node is close enough to the goal
+            if (distance(new_point[0], new_point[1], goal[0], goal[1]) < max_dist_){
+                TreeNode *goal_node = new TreeNode(goal);
+                new_node->appendChild(goal_node);
+                goal_node->setParent(new_node);
+                // root->printTree();
+                sol = goal_node->returnSolution();
+                std::cout << "Solution size" << sol.size() << std::endl;
+                finished = true;
+                break;
+            }
+        }
+        count ++;
     }
 
 
 
+    // publish the tree into rviz with markers
+    if (visualize_markers_ && finished){
+        std::cout << "Publishing markers" << std::endl;
+
+        visualization_msgs::Marker points, line_strip, line_list;
+        points.header.frame_id = line_strip.header.frame_id = line_list.header.frame_id = global_frame_id_;
+        points.header.stamp = line_strip.header.stamp = line_list.header.stamp = ros::Time::now();
+        points.ns = line_strip.ns = line_list.ns = "rrt";
+        points.action = line_strip.action = line_list.action = visualization_msgs::Marker::ADD;
+        points.pose.orientation.w = line_strip.pose.orientation.w = line_list.pose.orientation.w = 1.0;
+
+        points.id = 0;
+        line_strip.id = 1;
+        line_list.id = 2;
+
+        points.type = visualization_msgs::Marker::POINTS;
+        line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+        line_list.type = visualization_msgs::Marker::LINE_LIST;
+
+        // POINTS markers use x and y scale for width/height respectively
+        points.scale.x = 0.2;
+        points.scale.y = 0.2;
+
+        // LINE_STRIP/LINE_LIST markers use only the x component of scale, for the line width
+        line_strip.scale.x = 0.1;
+        line_list.scale.x = 0.1;
+
+        // Points are green
+        points.color.g = 1.0f;
+        points.color.a = 1.0;
+
+        // Line strip is blue
+        line_strip.color.b = 1.0;
+        line_strip.color.a = 1.0;
+
+        // Line list is red
+        line_list.color.r = 1.0;
+        line_list.color.a = 1.0;
 
 
 
-    itr_node->~TreeNode();
+        // Create the vertices for the points and lines
+        for(std::vector<int> node : sol){
+            geometry_msgs::Point p;
+            costmap_->mapToWorld((unsigned int)node[0], (unsigned int)node[1], p.x, p.y);
+            p.z = 0.0;
+            points.points.push_back(p);
+            line_strip.points.push_back(p);
+
+            // The line list needs two points for each line
+            line_list.points.push_back(p);
+            p.z += 0.1;
+            line_list.points.push_back(p);
+        }
+
+        // Publish the nodes marker
+        marker_pub_.publish(points);    
+        marker_pub_.publish(line_strip);
+        marker_pub_.publish(line_list);
+    }
+
+    delete root;
 
     return finished;
 }
