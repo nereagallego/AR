@@ -36,13 +36,15 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_
 
         nh.param("max_samples_", max_samples_, 100000.0);
 
+        // nh.param("max_dist_", max_dist_, 0.5);
+
         //to make sure one of the nodes in the plan lies in the local costmap
         double width, height;
         nh_local.param("width", width, 3.0);
         nh_local.param("height", height, 3.0);
-        max_dist_ = (std::min(width, height)/3.0);  //or any other distance within local costmap
+        max_dist_ = (std::min(width, height)/6.0);  //or any other distance within local costmap
 
-        nh_global.param("resolution", resolution_, 0.05);
+        nh_global.param("resolution", resolution_, 0.032);
 
         // std::cout << "Parameters: " << max_samples_ << ", " << dist_th_ << ", " << visualize_markers_ << ", " << max_dist_ << std::endl;
         // std::cout << "Local costmap size: " << width << ", " << height << std::endl;
@@ -125,12 +127,16 @@ bool RRTPlanner::computeRRT(const std::vector<int> start, const std::vector<int>
     std::uniform_real_distribution<> dis_x(0, costmap_->getSizeInCellsX());
     std::uniform_real_distribution<> dis_y(0, costmap_->getSizeInCellsY());
 
+    int max_dist_cells_ = int(max_dist_/0.032);
+    int cellWidth = int(16/0.032);
+    int cellHeight = int(16/0.032);
+
     // implement RRT algorithm here
     int count = 0;
     std::cout << "Max samples: " << int(max_samples_) << std::endl;
     while (count < int(max_samples_)){
-        int x_rand = dis_x(gen);
-        int y_rand = dis_y(gen);
+        int x_rand = int(rand() % cellWidth);
+        int y_rand = int(rand() % cellHeight);
         std::vector<int> point_rand{x_rand, y_rand};
         TreeNode *rand_node = new TreeNode(point_rand);
 
@@ -138,33 +144,34 @@ bool RRTPlanner::computeRRT(const std::vector<int> start, const std::vector<int>
         TreeNode *nearest_node = root->neast(rand_node);  
         std::vector<int> nearest_point = nearest_node->getNode();
 
+        std::vector<int> new_point;
+        // if the distance between the nearest node and the random point is greater than max_dist_
+        // then the new point is max_dist_ away from the nearest node in the direction of the random point
+        if (distance(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1]) > max_dist_cells_){
+            double theta = atan2(point_rand[1] - nearest_point[1], point_rand[0] - nearest_point[0]);
+            new_point = {nearest_point[0] + max_dist_cells_*cos(theta), nearest_point[1] + max_dist_cells_*sin(theta)};
+        }else{
+            new_point = point_rand;
+        }
+
         // check if the line between the nearest node and the random point is free of collision
-        if (obstacleFree(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1])){
+        if (obstacleFree(nearest_point[0], nearest_point[1], new_point[0], new_point[1])){
             
-            std::vector<int> new_point;
-            // if the distance between the nearest node and the random point is greater than max_dist_
-            // then the new point is max_dist_ away from the nearest node in the direction of the random point
-            if (distance(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1]) > max_dist_){
-                double theta = atan2(point_rand[1] - nearest_point[1], point_rand[0] - nearest_point[0]);
-                new_point.push_back(nearest_point[0] + max_dist_*cos(theta));
-                new_point.push_back(nearest_point[1] + max_dist_*sin(theta));
-            }else{
-                new_point = point_rand;
-            }
+            
 
             // add the new point to the tree
             TreeNode *new_node = new TreeNode(new_point);
             nearest_node->appendChild(new_node);
-            new_node->setParent(nearest_node);
+            // new_node->setParent(nearest_node);
             // itr_node = new_node;
 
             // check if the new node is close enough to the goal
-            if (distance(new_point[0], new_point[1], goal[0], goal[1]) < max_dist_){
-                TreeNode *goal_node = new TreeNode(goal);
-                new_node->appendChild(goal_node);
-                goal_node->setParent(new_node);
+            if (distance(new_point[0], new_point[1], goal[0], goal[1]) < max_dist_cells_ && obstacleFree(new_point[0], new_point[1], goal[0], goal[1])){
+                // TreeNode *goal_node = new TreeNode(goal);
+                // new_node->appendChild(goal_node);
+                // goal_node->setParent(new_node);
                 // root->printTree();
-                sol = goal_node->returnSolution();
+                sol = new_node->returnSolution();
                 std::cout << "Solution size" << sol.size() << std::endl;
                 finished = true;
                 break;
