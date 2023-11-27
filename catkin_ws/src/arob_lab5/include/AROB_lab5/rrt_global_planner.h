@@ -29,6 +29,8 @@ public:
     bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                     std::vector<geometry_msgs::PoseStamped>& plan);
 
+    void visualizeMarkers(const std::vector<std::vector<int>> sol);
+
 private:
 
     costmap_2d::Costmap2DROS* costmap_ros_;
