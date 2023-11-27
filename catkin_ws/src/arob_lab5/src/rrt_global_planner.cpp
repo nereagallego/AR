@@ -193,6 +193,7 @@ bool RRTPlanner::computeRRT(const std::vector<int> start, const std::vector<int>
         }
         count ++;
     }
+    ROS_INFO("Iterations: %d", count);
 
 
 
