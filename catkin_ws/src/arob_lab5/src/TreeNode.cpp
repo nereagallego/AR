@@ -166,4 +166,11 @@ std::vector <std::vector <int>> TreeNode::returnSolution(){
 	return solution;
 }
 
-
+int TreeNode::size(){
+    int count = 1;
+    for(int it = 0; it < children.size(); it++)
+    {   
+        count += children[it]->size();
+    }
+    return count;
+}
