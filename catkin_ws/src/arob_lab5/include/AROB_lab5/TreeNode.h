@@ -39,7 +39,6 @@ class TreeNode
 	
 		TreeNode* nearNode(TreeNode* node1, TreeNode* node2);
 		TreeNode* neast(TreeNode *root);
-        int size();
 };
 
 #endif

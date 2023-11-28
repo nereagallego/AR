@@ -88,6 +88,7 @@
   <export>
     <!-- Other tools can request additional information be placed here -->
     <nav_core plugin="${prefix}/rrt_global_planner_plugin.xml"/>
+    <nav_core plugin="${prefix}/llc_local_planner_plugin.xml"/>
   </export>
 
 </package>

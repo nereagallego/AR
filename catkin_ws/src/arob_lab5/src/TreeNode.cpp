@@ -142,9 +142,10 @@ TreeNode* TreeNode::neast(TreeNode *root){
     TreeNode *parent = root;
     TreeNode *child = NULL;
     TreeNode *shortest = parent;
-
+        
     for(int it = 0; it < parent->childrenNumber(); it++)
     {   
+       
         child = parent->getChild(it);
 	    shortest = nearNode(shortest,neast(child));
     }
@@ -166,11 +167,4 @@ std::vector <std::vector <int>> TreeNode::returnSolution(){
 	return solution;
 }
 
-int TreeNode::size(){
-    int count = 1;
-    for(int it = 0; it < children.size(); it++)
-    {   
-        count += children[it]->size();
-    }
-    return count;
-}
+

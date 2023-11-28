@@ -145,51 +145,58 @@ bool RRTPlanner::computeRRT(const std::vector<int> start, const std::vector<int>
     int count = 0;
     std::cout << "Max samples: " << int(max_samples_) << std::endl;
     while (!finished && count < int(max_samples_) ){
-        int c2 = 0;
-        int x_rand = int(rand() % costmap_->getSizeInCellsX());
-        int y_rand = int(rand() % costmap_->getSizeInCellsY());
+        // std::cout << "Iteration: " << count << std::endl;
+        // int c2 = 0;
+        int x_rand = int(rand() % cellWidth);
+        int y_rand = int(rand() % cellHeight);
         std::vector<int> point_rand{x_rand, y_rand};
 
         TreeNode *rand_node = new TreeNode(point_rand);
 
         // Find the closest node in the tree to the random point
-        TreeNode *nearest_node = rand_node->neast(root);  
+        // std::cout << "I am going to find the nearest node" << std::endl;
+        TreeNode *nearest_node = rand_node->neast(root); 
+        // std::cout << "I obtain nearest node" << std::endl;
         std::vector<int> nearest_point = nearest_node->getNode();
-
+        
         std::vector<int> new_point;
         // if the distance between the nearest node and the random point is greater than max_dist_
         // then the new point is max_dist_ away from the nearest node in the direction of the random point
         if (distance(nearest_point[0], nearest_point[1], point_rand[0], point_rand[1]) > max_dist_cells_){
+            // std::cout << "I am in the if" << std::endl;
             double theta = atan2(point_rand[1] - nearest_point[1], point_rand[0] - nearest_point[0]);
-            new_point[0] = nearest_point[0] + max_dist_cells_*cos(theta);
-            new_point[1] = nearest_point[1] + max_dist_cells_*sin(theta);
+            new_point.push_back(nearest_point[0] + max_dist_cells_*cos(theta));
+            new_point.push_back(nearest_point[1] + max_dist_cells_*sin(theta));
         }else{
+            // std::cout << "I am in the else" << std::endl;
             new_point = point_rand;
         }
 
+        // std::cout << "I obtain new point" << std::endl;
         // check if the line between the nearest node and the random point is free of collision
         if (obstacleFree(nearest_point[0], nearest_point[1], new_point[0], new_point[1])){
+            // std::cout << "I am in the if 2" << std::endl;
             
-            c2 ++;
 
             // add the new point to the tree
             TreeNode *new_node = new TreeNode(new_point);
             nearest_node->appendChild(new_node);
+
+            // std::cout << "I append the new node " << new_point[0] << ", " << new_point[1] << std::endl;
             // std::cout << "size of tree: " << root->size() << std::endl;
             // new_node->setParent(nearest_node);
-            // itr_node = new_node;
+
 
             // check if the new node is close enough to the goal
             if (distance(new_point[0], new_point[1], goal[0], goal[1]) <= max_dist_cells_ && obstacleFree(new_point[0], new_point[1], goal[0], goal[1])){
-                // TreeNode *goal_node = new TreeNode(goal);
-                // new_node->appendChild(goal_node);
+                TreeNode *goal_node = new TreeNode(goal);
+                new_node->appendChild(goal_node);
                 // goal_node->setParent(new_node);
                 // root->printTree();
                 sol = new_node->returnSolution();
-                std::cout << "Solution size" << sol.size() << std::endl;
-                std::cout << "size of tree: " << root->size() << std::endl;
-                std::cout << "Iterations: " << count << std::endl;
-                std::cout << "shoud be " << c2 << " nodes" << std::endl;
+                // std::cout << "Solution size" << sol.size() << std::endl;
+                // std::cout << "size of tree: " << root->size() << std::endl;
+                // std::cout << "Iterations: " << count << std::endl;
                 finished = true;
                 break;
             }
@@ -308,8 +315,7 @@ void RRTPlanner::visualizeMarkers(const std::vector<std::vector<int>> sol){
     // Create the vertices for the points and lines
     for(std::vector<int> node : sol){
         geometry_msgs::Point p;
-        p.x = node[0] * resolution_;
-        p.y = node[1] * resolution_;
+        costmap_->mapToWorld((unsigned int)node[0], (unsigned int)node[1], p.x, p.y);
         p.z = 0.0;
         points.points.push_back(p);
         line_strip.points.push_back(p);
