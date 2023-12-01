@@ -25,6 +25,7 @@ using namespace std;
 class drone_race {
 
     std::vector<geometry_msgs::Pose> gates;
+    std::vector<geometry_msgs::PoseStamped> goals;
 
     //Trajectory attributes
     mav_trajectory_generation::Trajectory trajectory;
@@ -34,9 +35,11 @@ class drone_race {
     ros::Publisher pub_traj_markers_;
     ros::Publisher pub_traj_vectors_;
     ros::Publisher pub_gate_markers_;
+    
 
     //Id markers
     int id_marker = 0;
+    int goal_index = 0;
 
     public:
 
@@ -162,11 +165,42 @@ class drone_race {
 
         // Definition of the trajectory beginning, end and intermediate constraints
         mav_trajectory_generation::Vertex::Vector vertices;
-        // INCLUDE YOUR CODE HERE
+        mav_trajectory_generation::Vertex start(dimension), middle(dimension), end(dimension);
+        
+        // Add start checkpoint
+        start.makeStartOrEnd(Eigen::Vector3d(0,0,0), derivative_to_optimize);
+        vertices.push_back(start);
+
+
+        // Add gate checkpoints
+        for (geometry_msgs::Pose gate : gates) {
+            middle.addConstraint(mav_trajectory_generation::derivative_order::POSITION, Eigen::Vector3d(gate.position.x, gate.position.y, gate.position.z));
+            // Eigen::Matrix orientation = quat_to_R_matrix(gate.orientation);
+            // Add constraints to make the trajectory smoother
+            // Eigen:Vector3d velocity(0, 0, 0);
+            // middle.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, velocity);
+            
+            // Eigen::Vector3d velocity(0.5, 0, 0);
+            
+            // middle.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, velocity);
+            vertices.push_back(middle);
+        }
+
+        end.makeStartOrEnd(Eigen::Vector3d(0,0,0), derivative_to_optimize);
+        vertices.push_back(end);
 
         // Provide the time constraints on the vertices
         std::vector<double> segment_times;
         // INCLUDE YOUR CODE HERE
+
+        //Automatic time computation
+        const double v_max = 10.0;
+        const double a_max = 10.0;
+        segment_times = estimateSegmentTimes(vertices, v_max, a_max);
+        cout << "Segment times = " << segment_times.size() << endl;
+        for (int i=0; i< segment_times.size() ; i++) {
+            cout << "Time " << i << " = " << segment_times[i] << endl;
+        }
         
         // Solve the optimization problem
         const int N = 10; //Degree of the polynomial, even number at least two times the highest derivative
@@ -197,12 +231,42 @@ class drone_race {
         //AROB visualization
         draw_trajectory_markers();
 
-        // Generate list of commands to publish to the drone
         // INCLUDE YOUR CODE HERE
+        // generate a list of goals to send to the drone from the trajectory
+        // generate a list of velocities to send to the drone from the trajectory
+        // generate a list of accelerations to send to the drone from the trajectory
+        // generate a list of jerks to send to the drone from the trajectory
+
+        cout << "Number of states = " << states.size() << endl;
+        goals.clear();
+        for (int i=0; i< states.size() ; i++) {
+            geometry_msgs::PoseStamped goal;
+            goal.velocity.linear.x = states[i].velocity_W[0];
+            goal.velocity.y = states[i].velocity_W[1];
+            goal.velocity.z = states[i].velocity_W[2];
+            goal.acceleration.x = states[i].acceleration_W[0];
+            goal.acceleration.y = states[i].acceleration_W[1];
+            goal.acceleration.z = states[i].acceleration_W[2];
+            goals.push_back(goal);
+        }
+        
+
+
+        
+
+       
+        
     }
 
     void send_command() {
-        // INCLUDE YOUR CODE TO PUBLISH THE COMMANDS TO THE DRONE
+        // INCLUDE YOUR CODE TO PUBLISH THE COMMANDS TO THE DRONE   
+        // decide wich goal to send
+
+        // publish the goal
+        pub_gate_markers_.publish(goals[goal_index]);
+        goal_index++;
+
+        
     }
 
     private: 
@@ -430,7 +494,7 @@ int main(int argc, char** argv) {
         filegates.append(argv[argc-1]);
     }
     else {
-        filegates.append("gates.txt");
+        filegates.append("gates_hard.txt");
     }
     race.readGates(filegates);
 
@@ -441,8 +505,8 @@ int main(int argc, char** argv) {
     }
     race.drawGates();
 
-    race.generate_trajectory_example();
-    //race.generate_trajectory();
+    // race.generate_trajectory_example();
+    race.generate_trajectory();
 
     while (ros::ok())
     {
