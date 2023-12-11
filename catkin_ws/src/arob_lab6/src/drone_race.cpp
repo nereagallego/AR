@@ -26,6 +26,9 @@ class drone_race {
 
     std::vector<geometry_msgs::Pose> gates;
     std::vector<geometry_msgs::PoseStamped> goals;
+    std::vector<geometry_msgs::Twist> velocities;
+    geometry_msgs::PoseStamped goal_search;
+    
 
     //Trajectory attributes
     mav_trajectory_generation::Trajectory trajectory;
@@ -35,6 +38,9 @@ class drone_race {
     ros::Publisher pub_traj_markers_;
     ros::Publisher pub_traj_vectors_;
     ros::Publisher pub_gate_markers_;
+    ros::Publisher goal_pub_;
+    ros::Subscriber position_sub_;
+    std::vector<double> previousPose;
     
 
     //Id markers
@@ -52,6 +58,9 @@ class drone_race {
             nh_.advertise<visualization_msgs::MarkerArray>("trajectory_vectors", 0);
         pub_gate_markers_ =
             nh_.advertise<visualization_msgs::MarkerArray>("gate_markers", 0);
+
+        goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/command/pose", 1);
+        position_sub_ = nh_.subscribe("ground_truth/state", 1, &drone_race::send_command, this);
 	}
 
     ~drone_race() {
@@ -177,14 +186,14 @@ class drone_race {
             middle.addConstraint(mav_trajectory_generation::derivative_order::POSITION, Eigen::Vector3d(gate.position.x, gate.position.y, gate.position.z));
             // Eigen::Matrix orientation = quat_to_R_matrix(gate.orientation);
             // Add constraints to make the trajectory smoother
-            // Eigen:Vector3d velocity(0, 0, 0);
-            // middle.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, velocity);
-            
-            // Eigen::Vector3d velocity(0.5, 0, 0);
-            
-            // middle.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, velocity);
             vertices.push_back(middle);
+
+            // middle.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
+            
+            // vertices.push_back(middle);
+            
         }
+        
 
         end.makeStartOrEnd(Eigen::Vector3d(0,0,0), derivative_to_optimize);
         vertices.push_back(end);
@@ -240,34 +249,77 @@ class drone_race {
         cout << "Number of states = " << states.size() << endl;
         goals.clear();
         for (int i=0; i< states.size() ; i++) {
+        //     geometry_msgs::Twist velocity;
             geometry_msgs::PoseStamped goal;
-            goal.velocity.linear.x = states[i].velocity_W[0];
-            goal.velocity.y = states[i].velocity_W[1];
-            goal.velocity.z = states[i].velocity_W[2];
-            goal.acceleration.x = states[i].acceleration_W[0];
-            goal.acceleration.y = states[i].acceleration_W[1];
-            goal.acceleration.z = states[i].acceleration_W[2];
+         
+            goal.pose.position.x = states[i].position_W[0];
+            goal.pose.position.y = states[i].position_W[1];
+            goal.pose.position.z = states[i].position_W[2];
+        //     goal.pose.orientation = RPY_to_quat(0, 0, 0);
             goals.push_back(goal);
-        }
-        
-
-
-        
-
-       
+        //     velocity.linear.x = states[i].velocity_W[0];
+        //     velocity.linear.y = states[i].velocity_W[1];
+        //     velocity.linear.z = states[i].velocity_W[2];
+        //     velocities.push_back(velocity);
+            
+        }       
+        std::cout << "First goal: " << goals[0] << std::endl;
+        goal_pub_.publish(goals[goal_index]);
+        goal_search = goals[goal_index];
+        goal_index ++;
         
     }
 
-    void send_command() {
+    void send_command(const nav_msgs::Odometry& msg) {
         // INCLUDE YOUR CODE TO PUBLISH THE COMMANDS TO THE DRONE   
         // decide wich goal to send
 
         // publish the goal
-        pub_gate_markers_.publish(goals[goal_index]);
-        goal_index++;
+        
+        // pub_gate_markers_.publish(accelerations[goal_index]);
+        
+        if(goals.size() > 0){
+            float ex = goal_search.pose.position.x - msg.pose.pose.position.x ;
+            float ey = goal_search.pose.position.y - msg.pose.pose.position.y ;
+            float ez = goal_search.pose.position.z - msg.pose.pose.position.z ;
+            std::cout << msg.pose.pose.position.x << " " << msg.pose.pose.position.y << " " << msg.pose.pose.position.z << std::endl;
+            std::cout << ex << " " << ey << " " << ez << std::endl;
+            if (abs(ex) < 0.2 and abs(ey) < 0.2 and abs(ez) < 0.2) {
+                //if the robot has reached the current target, publish the next target
+                if (goal_index < goals.size()) {
+                    
+                    goal_pub_.publish(goals[goal_index]);
+                    goal_search = goals[goal_index];
+                    goal_index ++;
+                }
+            }
 
+            // if the robot is not moving and the robot has not reached the current target, publish the goal again
+            else if (!isMoving({msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z}) && (goal_index < goals.size() && ! (abs(ex) < 0.1 and abs(ey) < 0.1 and abs(ez) < 0.1))) {
+                cout << "Robot is not moving, publishing goal again" << endl;
+                geometry_msgs::PoseStamped Goal;
+                Goal.pose.position.x = goals[goal_index].pose.position.x;
+                Goal.pose.position.y = goals[goal_index].pose.position.y;
+                Goal.pose.position.z = goals[goal_index].pose.position.z;
+                goal_pub_.publish(Goal);
+            }
+
+        }
+        
+		previousPose = {msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z};
         
     }
+
+    bool isMoving(std::vector<double> currentPose){
+		//if the robot is moving, return true
+		//if the robot is not moving, return false
+		//you can use the distance between the current pose and the previous pose
+		//if the distance is less than a threshold, the robot is not moving
+		//if the distance is greater than a threshold, the robot is moving
+		//you can use the function sqrt(pow(x,2)+pow(y,2)) to compute the distance between two points
+		//you can use a threshold of 0.01
+		return sqrt(pow(currentPose[0]-previousPose[0],2) + pow(currentPose[1]-previousPose[1],2) + pow(currentPose[2]-previousPose[2],2)) > 0.05 ? true : false;
+	}
 
     private: 
         Eigen::Matrix<double, 3, 3> RPY_to_R_matrix(double roll, double pitch, double yaw) {
@@ -508,11 +560,12 @@ int main(int argc, char** argv) {
     // race.generate_trajectory_example();
     race.generate_trajectory();
 
-    while (ros::ok())
-    {
-        race.send_command();
-        ros::spinOnce();
-        loop_rate.sleep();
-    }
+    // while (ros::ok())
+    // {
+    //     // race.send_command();
+    //     ros::spinOnce();
+    //     loop_rate.sleep();
+    // }
+    ros::spin();
 	return 0;
 }
