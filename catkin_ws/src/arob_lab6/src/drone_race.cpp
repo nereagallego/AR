@@ -203,7 +203,7 @@ class drone_race {
         // INCLUDE YOUR CODE HERE
 
         //Automatic time computation
-        const double v_max = 10.0;
+        const double v_max = 20.0;
         const double a_max = 10.0;
         segment_times = estimateSegmentTimes(vertices, v_max, a_max);
         cout << "Segment times = " << segment_times.size() << endl;
@@ -282,9 +282,8 @@ class drone_race {
             float ex = goal_search.pose.position.x - msg.pose.pose.position.x ;
             float ey = goal_search.pose.position.y - msg.pose.pose.position.y ;
             float ez = goal_search.pose.position.z - msg.pose.pose.position.z ;
-            std::cout << msg.pose.pose.position.x << " " << msg.pose.pose.position.y << " " << msg.pose.pose.position.z << std::endl;
-            std::cout << ex << " " << ey << " " << ez << std::endl;
-            if (abs(ex) < 0.2 and abs(ey) < 0.2 and abs(ez) < 0.2) {
+            float error = sqrt(pow(ex,2) + pow(ey,2) + pow(ez,2));
+            if (error < 0.5) {
                 //if the robot has reached the current target, publish the next target
                 if (goal_index < goals.size()) {
                     
@@ -297,11 +296,9 @@ class drone_race {
             // if the robot is not moving and the robot has not reached the current target, publish the goal again
             else if (!isMoving({msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z}) && (goal_index < goals.size() && ! (abs(ex) < 0.1 and abs(ey) < 0.1 and abs(ez) < 0.1))) {
                 cout << "Robot is not moving, publishing goal again" << endl;
-                geometry_msgs::PoseStamped Goal;
-                Goal.pose.position.x = goals[goal_index].pose.position.x;
-                Goal.pose.position.y = goals[goal_index].pose.position.y;
-                Goal.pose.position.z = goals[goal_index].pose.position.z;
-                goal_pub_.publish(Goal);
+                std::cout << msg.pose.pose.position.x << " " << msg.pose.pose.position.y << " " << msg.pose.pose.position.z << std::endl;
+                std::cout << goal_search.pose.position.x << " " << goal_search.pose.position.y << " " << goal_search.pose.position.z << std::endl;
+                goal_pub_.publish(goal_search);
             }
 
         }
