@@ -11,7 +11,7 @@ oscillation_distance: 0.2
 
 # Local planner
 # base_local_planner: dwa_local_planner/DWAPlannerROS
-base_local_planner: p09_llc_local_planner/LLCLocalPlanner
+base_local_planner: p09_llc_nd_local_planner/LLCNDLocalPlanner
 # ALTERNATIVES: dwa_local_planner/DWAPlannerROS, base_local_planner/TrajectoryPlannerROS
 
 # Global planner

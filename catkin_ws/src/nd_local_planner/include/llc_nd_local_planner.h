@@ -37,7 +37,7 @@ class LLCNDLocalPlanner: public nav_core::BaseLocalPlanner{
 	double distance_max_;
 
 	// Control parameters
-	doulbe security_distance_;
+	double security_distance_;
 	double security_nearness_;
 
 	int ls2_diff_;

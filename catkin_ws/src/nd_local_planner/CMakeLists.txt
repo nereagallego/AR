@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
   # pluginlib
   # nav_core
   # base_local_planner

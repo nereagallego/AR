@@ -19,7 +19,7 @@ namespace p09_llc_nd_local_planner{
 		int sector_l; // left sector
 		int sector_r; // right sector
 		int distance_to_goal; // distance to the goal from sector_rd in sectors
-	}
+	};
 
 	double euclideanDistance(const geometry_msgs::Pose pose1, const geometry_msgs::Pose pose2){
 		double ex = pose2.position.x - pose1.position.x;
@@ -28,7 +28,7 @@ namespace p09_llc_nd_local_planner{
 		return std::sqrt(ex*ex+ey*ey);
 	}
 
-	bool sort_valleys(const Vallet& v1, const Vallet& v2){
+	bool sort_valleys(const Valley& v1, const Valley& v2){
 		return v1.distance_to_goal < v2.distance_to_goal;
 	}
 
@@ -45,8 +45,8 @@ namespace p09_llc_nd_local_planner{
 	}
 
 	double clampAngle(const double a){
-		if (a > M_PI_2) a = M_PI_2;
-		if (a < -M_PI_2) a = - M_PI_2;
+		if (a > M_PI_2) return M_PI_2;
+		if (a < -M_PI_2) return - M_PI_2;
 		return a;
 	}
 
@@ -58,7 +58,7 @@ namespace p09_llc_nd_local_planner{
 		return (int)ceil((M_PI - angle) * (n_sectors / 2.0f)/ M_PI) - 1;
 	}
 
-	bool isValleyNavigable(const  geometry_msgs::Pose &robot_pose, const double robot_radius, const geometry_msgs::Pose &goal, const std::vectpr<geometry_msgs::Pose>& obstacles, const std::vector<double>& obstacles_distance, const std::vector<double>& obstacle_angle){
+	bool isValleyNavigable(const  geometry_msgs::Pose &robot_pose, const double robot_radius, const geometry_msgs::Pose &goal, const std::vector<geometry_msgs::Pose>& obstacles, const std::vector<double>& obstacles_distance, const std::vector<double>& obstacle_angle){
 		const double robot_fit = robot_radius * 2.0f;
 
 		double angle_goal = atan2(goal.position.y, goal.position.x);
@@ -70,7 +70,7 @@ namespace p09_llc_nd_local_planner{
 		std::vector<int> right_obstacles, left_obstacles;
 		for(int i = 0; i < obstacles.size(); i++){
 			// check if goal cannot be reached. Goal too close to obstacle
-			double distance_obstacle_goal = euclideanDistance(ostacles[i], goal);
+			double distance_obstacle_goal = euclideanDistance(obstacles[i], goal);
 			if (distance_obstacle_goal < robot_radius) {
 				ROS_WARN("Goal too close to obstacle");
 				return false;
@@ -98,6 +98,21 @@ namespace p09_llc_nd_local_planner{
 
 		}
 
+		// check if there are obstacles in the way
+		if (right_obstacles.size() > 0 && left_obstacles.size() > 0) {
+			for(int i = 0; i < right_obstacles.size(); i ++){
+				geometry_msgs::Pose obstacle_right = obstacles[right_obstacles[i]];
+				for(int j = 0; j < left_obstacles.size(); j++){
+					geometry_msgs::Pose obstacle_left = obstacles[left_obstacles[j]];
+					double distance = euclideanDistance(obstacle_right, obstacle_left);
+					if (distance < robot_fit) {
+						ROS_WARN("Goal can't be reached. Obstacles in the way");
+						return false;
+					}
+				}
+			}
+		}
+
 		return true;
 	}
 
@@ -118,7 +133,7 @@ namespace p09_llc_nd_local_planner{
 
 			// nh_local.getParam("robot_radius", robot_radius_);
 			nh.getParam("robot_radius", robot_radius_);
-			nh.getParam("distance_robot_bounds", distance_robot_bounds_);
+			nh.getParam("distance_robot_bounds", distance_bounds_);
 			nh.getParam("distance_goal_factor", goal_factor_);
 			nh.getParam("max_linear_velocity", v_max_);
 			nh.getParam("ls2_diff", ls2_diff_);
@@ -137,11 +152,15 @@ namespace p09_llc_nd_local_planner{
 			ROS_WARN("This planner has already been initialized, doing nothing.");
 		}
 
+		std::cout << "Initialized" << std::endl;
+
 	}
 
 	bool LLCNDLocalPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped>& plan){
 
 		// std:cout << "setPlan ..." << std::endl;
+
+		
 		
 		if(!initialized_){
 			ROS_ERROR("THe planner has not been initialized.");
@@ -174,7 +193,7 @@ namespace p09_llc_nd_local_planner{
 	// TODO: implement this method
 	bool LLCNDLocalPlanner::computeVelocityCommands(geometry_msgs::Twist& cmd_vel){
 	    //Compute the velocity command (v,w) for a differential-drive robot
-
+		auto begin = std::chrono::steady_clock::now();
 		// std::cout << "ComputeVelocityCommands ..." << std::endl;
 
 		if(!initialized_){
@@ -183,9 +202,14 @@ namespace p09_llc_nd_local_planner{
 		}
 
 		//Get robot and goal pose in the global frame of the local costmap
-		geometry_msgs::PoseStamped robot_pose;
-		costmap_ros_->getRobotPose(robot_pose);
-		geometry_msgs::PoseStamped goal = global_plan_.back();
+		geometry_msgs::PoseStamped robot_pose,robot_global_pose;
+		if(!costmap_ros_->getRobotPose(robot_global_pose)){
+			ROS_ERROR("Could not get robot pose");
+			cmd_vel.linear.x = 0;
+			cmd_vel.angular.z = 0;
+			return false;
+		}
+		geometry_msgs::PoseStamped goal;
 
 		costmap_ = costmap_ros_->getCostmap();
 
@@ -203,12 +227,23 @@ namespace p09_llc_nd_local_planner{
 								ros::Duration(0.5)
 								);
 		} catch(tf2::TransformException& e) {
+			std::cout << "LELELLELELELEL" << std::endl;
 			ROS_ERROR("NDLocalPlanner: Error in lookupTransform");
 			cmd_vel.linear.x = 0;
 			cmd_vel.angular.z = 0;
         	return false;
 		}
 
+		std::cout << "Robot global pose: " << robot_global_pose.pose.position.x << " " << robot_global_pose.pose.position.y << std::endl;
+
+		// Transform robot and goal pose to robot frame
+		tf2::doTransform(robot_global_pose, robot_pose, globalToRobotTransform_);
+		std::cout << "Robot pose: " << robot_pose.pose.position.x << " " << robot_pose.pose.position.y << std::endl;
+		tf2::doTransform(global_plan_.back(), goal, globalToRobotTransform_);
+		
+		
+		std::cout << "Goal pose: " << goal.pose.position.x << " " << goal.pose.position.y << std::endl;
+		
 		// 1) Read obstacles from costmap
 		std::vector<double> distances(num_sectors_, distance_max_ + 10.0f);
 		std::vector<geometry_msgs::Pose> obstacles; // obstacle positions
@@ -249,7 +284,7 @@ namespace p09_llc_nd_local_planner{
 			double dist = distances[i];
 			if (dist <= distance_max_ && dist > 0){
 				pnd[i] = distance_max_ + robot_fit - dist;
-				rnd[i] = distance_max_ + distance_robot_bounds_ - dist;
+				rnd[i] = distance_max_ + distance_bounds_ - dist;
 				obstacle_in_front = true;
 			}
 		}
@@ -368,9 +403,117 @@ namespace p09_llc_nd_local_planner{
 			
 			}
 
-
+			if(isValleyNavigable(robot_pose.pose, robot_radius_, goal_pose, obstacles, dist_obst_robot, angle_obst_robot)) break;
 		}
 		
+		if(idx_valley == valleys.size()){
+			// No valley navigable
+			ROS_ERROR("No valley navigable");
+			cmd_vel.linear.x = 0;
+			cmd_vel.angular.z = 0;
+			return false;
+		}
+
+		// Check if there is an obstacle inside the safety area
+		int sector_m_left = -1, sector_m_right = -1;
+		double distance_obstacle_left = distance_max_ + 10.0f, distance_obstacle_right = distance_max_ + 10.0f;
+		double max_m_left = 0.0f, max_m_right = 0.0f;
+		for(int i = num_sectors_/4; i < 3*num_sectors_/4; i++){
+			if(rnd[i] > security_nearness_){
+				if(i <= valley.sector_rd && rnd[i] > max_m_left){
+					sector_m_left = i;
+					max_m_left = rnd[i];
+					distance_obstacle_left = distances[i];
+				} else if(i >= valley.sector_rd && rnd[i] > max_m_right){
+					sector_m_right = i;
+					max_m_right = rnd[i];
+					distance_obstacle_right = distances[i];
+				}
+			}
+		}
+
+		
+		double v = 0.0f, w = 0.0f, th = 0.0f;
+		
+		// Safety criterion
+		bool obs_left = (sector_m_left != -1);
+		bool obs_right = (sector_m_right != -1);
+
+		if (obs_left || obs_right) { //Low safety
+			cout << "Low safety" << endl;
+			int sector_angle;
+			double distance_obstacle = (distance_obstacle_left < distance_obstacle_right ? distance_obstacle_left : distance_obstacle_right)- robot_radius_ ;
+
+			if(obs_left && obs_right){ // Low safety 2
+				int sector_med = (sector_m_left + sector_m_right) / 2;
+				float coefficient = 1.0 - distance_obstacle / (distance_obstacle_right + distance_obstacle_left);
+				int c = round((float) ls2_diff_ * coefficient);
+
+				if(distance_obstacle_left > distance_obstacle_right) c = -c;
+				
+				sector_angle = sector_med + c;
+			} else { // Low safety 1
+				int sign = 0;
+				if(valley.sector_rd == valley.sector_l && obs_left) sign = 1;
+				else if(valley.sector_rd == valley.sector_r && obs_right) {
+					sign = -1;
+					sector_m_left = sector_m_right;
+				} 
+
+				int sector_p = 1;
+				if(sign != 0){
+					int diff = diffSectors(valley.sector_rd, sector_m_left, num_sectors_);
+					sector_p = (wide_valley_ / 2) / 2 * (1 - (float)(diff) / (float)(num_sectors_ / 2)) + (wide_valley_ / 2);
+				}
+
+				sector_angle = valley.sector_rd + sign * sector_p;
+			}
+
+			sector_angle = sector_angle % num_sectors_;
+			th = bisectorAngle(sector_angle, num_sectors_);
+			th = clampAngle(th);
+			v = v_max_ * (distance_obstacle / security_distance_) * abs(1 - abs(th) / M_PI_2);
+		} else { // High safety
+			cout << "High safety" << endl;
+		
+
+			if(goal_in_valley){ // Goal in region
+				th = bisectorAngle(sector_goal, num_sectors_);
+				cout << "Goal in region" << endl;
+			} else { // Free walking area width criterion
+				int sector_th;
+				int valley_width = diffSectors(valley.sector_l, valley.sector_r, num_sectors_);
+				if (valley_width > wide_valley_){ // High Safety Wide Region
+					cout << "Wide region" << endl;
+					if(valley.sector_rd == valley.sector_l) sector_th = valley.sector_rd + wide_valley_ / 4;
+					else sector_th = valley.sector_rd - wide_valley_ / 4;
+				} else { // High Safety Narrow Region
+					cout << "Narrow region" << endl;
+					if (valley.sector_l <= valley.sector_r) sector_th = (valley.sector_l + valley.sector_r) / 2;
+					else sector_th = valley.sector_l + (valley_width-1) / 2;
+					
+				}
+				sector_th = sector_th % num_sectors_;
+				th = bisectorAngle(sector_th, num_sectors_);
+			}
+			th = clampAngle(th);
+			
+			v = v_max_ * abs(1 - abs(th) / M_PI_2);
+
+		}
+
+		// Angular velocity
+		w = w_max_ * th / M_PI_2;
+		
+		std::cout << "v: " << v << " w: " << w << std::endl;
+		std::cout << "th: " << th << std::endl;
+
+		cmd_vel.linear.x = v;
+		cmd_vel.angular.z = w;
+
+		auto end = std::chrono::steady_clock::now();
+		unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
+		std::cout << "Time: " << time << std::endl;
 
 		return true;
 	}
@@ -393,10 +536,7 @@ namespace p09_llc_nd_local_planner{
 
 		float dist = euclideanDistance(robot_pose.pose, goal.pose);
 
-		bool goalReached = dist < rho_th_;
-
-
-
+		bool goalReached = dist < robot_radius_ * goal_factor_;
 
 		return goalReached;		
 	}
