@@ -11,7 +11,11 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf/tf.h>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <angles/angles.h>
+#include <chrono>
+#include <vector>
 
 namespace p09_llc_nd_local_planner{
 
@@ -46,8 +50,8 @@ class LLCNDLocalPlanner: public nav_core::BaseLocalPlanner{
 	int wide_valley_;
 
 
-	long unsigned int exec_t_ = 0;
-	long unsigned int n_times_ = 0;
+	long unsigned int exec_time = 0;
+	long unsigned int n_times = 0;
 
 public:
 

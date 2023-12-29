@@ -1,7 +1,7 @@
 LLCNDLocalPlanner:
   distance_robot_bounds: 0.225
   robot_radius_nd: 0.225
-  distance_goal_factor: 1.7
+  distance_goal_factor: 1.0
   max_linear_velocity: 0.5
   max_rotational_velocity: 1.57
   max_sensor_distance: 3.0

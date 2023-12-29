@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  tf
+  # tf
   tf2
   tf2_ros
   tf2_geometry_msgs
@@ -116,6 +116,9 @@ catkin_package(
 #  LIBRARIES AROB_lab4
 #  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs tf
 #  DEPENDS system_lib
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp tf2 tf2_ros geometry_msgs 
 )
 
 ###########
