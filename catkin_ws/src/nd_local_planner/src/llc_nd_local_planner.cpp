@@ -131,7 +131,6 @@ namespace p09_llc_nd_local_planner{
 			nh.getParam("distance_robot_bounds", distance_bounds_);
 			nh.getParam("max_linear_velocity", v_max_);
 			nh.getParam("max_rotational_velocity", w_max_);
-			nh.getParam("ls2_diff", ls2_diff_);
 			nh.getParam("security_distance", security_distance_);
 			nh.getParam("max_sensor_distance", distance_max_);
 			security_nearness_ = distance_max_ - security_distance_;
@@ -431,7 +430,7 @@ namespace p09_llc_nd_local_planner{
 				std::cout << "Low Safety 2" << std::endl;
 				
 				int sector_med = (sector_m_left + sector_m_right) / 2;
-				int c = round((float)ls2_diff_ * (1.0f - distance_obstacle / (distance_obstacle_right + distance_obstacle_left)));
+				int c = round( (1.0f - distance_obstacle / (distance_obstacle_right + distance_obstacle_left)));
 
 				c = (distance_obstacle_left > distance_obstacle_right) ? -c : c;
 				sector_th = sector_med + c;

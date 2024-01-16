@@ -44,8 +44,6 @@ class LLCNDLocalPlanner: public nav_core::BaseLocalPlanner{
 	double security_distance_;
 	double security_nearness_;
 
-	int ls2_diff_;
-
 	int num_sectors_;
 	int wide_valley_;
 
