@@ -1,0 +1,5 @@
+# COMPILATION
+catkin build nd_local_planner
+
+# EXECUTION
+roslaunch nd_local_planner arob-p4-navigation-plugin.launch

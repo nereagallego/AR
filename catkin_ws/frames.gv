@@ -1,10 +1,10 @@
 digraph G {
-"base_link" -> "base_laser_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
-"base_footprint" -> "base_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
-"odom" -> "base_footprint"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 175.5\nOldest transform: 170.6\n"];
-"map" -> "odom"[label=" Broadcaster: /amcl\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 176.5\nOldest transform: 171.6\n"];
+"map" -> "odom"[label=" Broadcaster: /amcl\nAverage rate: 10.2\nBuffer length: 5.0\nMost recent transform: 20.3\nOldest transform: 15.3\n"];
+"base_link" -> "base_laser_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 19.3\nOldest transform: 14.4\n"];
+"base_footprint" -> "base_link"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 19.3\nOldest transform: 14.4\n"];
+"odom" -> "base_footprint"[label=" Broadcaster: /stage_ros\nAverage rate: 10.204\nBuffer length: 4.9\nMost recent transform: 19.3\nOldest transform: 14.4\n"];
 edge [style=invis];
  subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
-"Recorded at time: 175.5"[ shape=plaintext ] ;
+"Recorded at time: 19.3"[ shape=plaintext ] ;
 }->"map";
 }
